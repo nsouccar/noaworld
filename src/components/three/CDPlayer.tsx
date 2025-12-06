@@ -109,15 +109,15 @@ export function CDPlayer({
         />
       </group>
 
-      {/* Invisible click area for the whole player */}
+      {/* Click area for the whole player */}
       <mesh
         position={[0, 0.25, 0]}
-        onClick={handlePlayPause}
-        onPointerOver={(e) => { document.body.style.cursor = 'pointer'; e.stopPropagation() }}
+        onClick={(e) => { e.stopPropagation(); handlePlayPause() }}
+        onPointerOver={(e) => { e.stopPropagation(); document.body.style.cursor = 'pointer' }}
         onPointerOut={() => { document.body.style.cursor = 'default' }}
       >
-        <boxGeometry args={[1, 0.5, 1]} />
-        <meshBasicMaterial transparent opacity={0} />
+        <boxGeometry args={[1.5, 0.8, 1.5]} />
+        <meshBasicMaterial transparent opacity={0} depthWrite={false} />
       </mesh>
 
       {/* Song info display - floating above the player */}
@@ -155,17 +155,18 @@ export function CDPlayer({
       </Html>
 
       {/* Previous button - overlaid on model */}
-      <Html position={[-0.15, 0.15, 0.35]} center transform occlude>
+      <Html position={[-0.15, 0.15, 0.35]} center transform>
         <button
           onClick={(e) => { e.stopPropagation(); handlePrev() }}
           style={{
-            background: 'transparent',
+            background: 'rgba(0,0,0,0.5)',
             color: 'white',
             border: 'none',
             width: '24px',
             height: '24px',
             cursor: 'pointer',
             fontSize: '12px',
+            borderRadius: '4px',
           }}
         >
           ⏮
@@ -173,17 +174,18 @@ export function CDPlayer({
       </Html>
 
       {/* Play/Pause button - overlaid on model */}
-      <Html position={[0, 0.15, 0.35]} center transform occlude>
+      <Html position={[0, 0.15, 0.35]} center transform>
         <button
           onClick={(e) => { e.stopPropagation(); handlePlayPause() }}
           style={{
-            background: 'transparent',
+            background: 'rgba(0,0,0,0.5)',
             color: isPlaying ? '#00ff00' : 'white',
             border: 'none',
             width: '28px',
             height: '28px',
             cursor: 'pointer',
             fontSize: '14px',
+            borderRadius: '4px',
           }}
         >
           {isPlaying ? '⏸' : '▶'}
@@ -191,17 +193,18 @@ export function CDPlayer({
       </Html>
 
       {/* Next button - overlaid on model */}
-      <Html position={[0.15, 0.15, 0.35]} center transform occlude>
+      <Html position={[0.15, 0.15, 0.35]} center transform>
         <button
           onClick={(e) => { e.stopPropagation(); handleNext() }}
           style={{
-            background: 'transparent',
+            background: 'rgba(0,0,0,0.5)',
             color: 'white',
             border: 'none',
             width: '24px',
             height: '24px',
             cursor: 'pointer',
             fontSize: '12px',
+            borderRadius: '4px',
           }}
         >
           ⏭
