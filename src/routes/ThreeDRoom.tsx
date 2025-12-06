@@ -34,6 +34,7 @@ function CameraConstraint() {
     }
   })
 
+  // TEMP: Target the CD player
   return (
     <OrbitControls
       ref={controlsRef}
@@ -42,7 +43,8 @@ function CameraConstraint() {
       maxDistance={3}
       minDistance={0.3}
       maxPolarAngle={Math.PI * 0.85}
-      minPolarAngle={Math.PI * 0.15}
+      minPolarAngle={0}
+      target={[-1, 0.15, -1]}
     />
   )
 }
@@ -50,7 +52,8 @@ function CameraConstraint() {
 export default function ThreeDRoom() {
   return (
     <div style={{ width: '100%', height: '100vh' }}>
-      <Canvas camera={{ position: [0, 1.5, 1.8], fov: 70 }}>
+      {/* TEMP: Bird's eye view of CD player at [-1, 0.15, -1] */}
+      <Canvas camera={{ position: [-1, 2.2, -1], fov: 50 }}>
         <CameraConstraint />
         <Room />
       </Canvas>

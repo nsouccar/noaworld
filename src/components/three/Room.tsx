@@ -1,7 +1,21 @@
+import { useGLTF } from '@react-three/drei'
 import RoomShell from './RoomShell'
 import Furniture from './Furniture'
 import Posters from './Posters'
 import Window from './Window'
+import { CDPlayer } from './CDPlayer'
+
+function Guitar() {
+  const { scene } = useGLTF('/objects/guitar.glb')
+  return (
+    <primitive
+      object={scene}
+      position={[0, 0.1, 0]}
+      scale={0.5}
+      rotation={[-Math.PI / 2, 0, -Math.PI / 4]}
+    />
+  )
+}
 
 export default function Room() {
   return (
@@ -27,6 +41,12 @@ export default function Room() {
 
       {/* Wall posters */}
       <Posters />
+
+      {/* CD Player on the floor */}
+      <CDPlayer position={[-1.4, 0.15, -0.5]} scale={0.4} />
+
+      {/* Guitar on floor */}
+      <Guitar />
     </group>
   )
 }

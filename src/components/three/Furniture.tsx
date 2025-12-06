@@ -141,16 +141,6 @@ export function Bed() {
   )
 }
 
-export function SleepingDog() {
-  const { scene } = useGLTF('/objects/lev-small.glb')
-
-  return (
-    <group position={[0, 0, 0.5]} rotation={[0, Math.PI * 0.3, 0]}>
-      <primitive object={scene} scale={0.5} />
-    </group>
-  )
-}
-
 // Single book component
 function BookMesh({
   book,
@@ -283,7 +273,6 @@ export function Lamp() {
 // Preload models
 useGLTF.preload('/objects/desk.glb')
 useGLTF.preload('/objects/gothic-bed.glb')
-useGLTF.preload('/objects/lev-small.glb')
 useGLTF.preload('/objects/lamp.glb')
 
 export default function Furniture() {
@@ -292,7 +281,6 @@ export default function Furniture() {
       <Desk />
       <Bed />
       <Nightstand />
-      <SleepingDog />
       <Lamp />
     </group>
   )
