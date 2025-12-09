@@ -1,8 +1,8 @@
 import { useRef, useState, useEffect, useMemo } from 'react'
 import { useFrame } from '@react-three/fiber'
-import { Html, useGLTF } from '@react-three/drei'
+import { useGLTF, Text } from '@react-three/drei'
 import * as THREE from 'three'
-import { songs } from '../../data/songs'
+import { tracks } from '../../data/music'
 
 const TARGET_SPIN_SPEED = 3 // Full speed when playing
 const SPIN_LERP_FACTOR = 2 // How fast to accelerate/decelerate
@@ -29,7 +29,7 @@ export function CDPlayer({
   // Clone CD scene once to avoid re-cloning on every render
   const clonedCd = useMemo(() => cdScene.clone(), [cdScene])
 
-  const currentSong = songs[currentSongIndex]
+  const currentTrack = tracks[currentSongIndex]
 
   // Initialize audio element
   useEffect(() => {
@@ -45,13 +45,13 @@ export function CDPlayer({
 
   // Update audio source when song changes
   useEffect(() => {
-    if (audioRef.current && currentSong) {
-      audioRef.current.src = currentSong.audioFile
+    if (audioRef.current && currentTrack) {
+      audioRef.current.src = currentTrack.audioUrl
       if (isPlaying) {
-        audioRef.current.play()
+        audioRef.current.play().catch(console.error)
       }
     }
-  }, [currentSongIndex])
+  }, [currentSongIndex, currentTrack, isPlaying])
 
   // Spin the CD with smooth acceleration/deceleration
   useFrame((_, delta) => {
@@ -74,21 +74,20 @@ export function CDPlayer({
   const handlePlayPause = () => {
     if (isPlaying) {
       audioRef.current?.pause()
-    } else if (audioRef.current && songs.length > 0) {
-      audioRef.current.play()
+    } else if (audioRef.current && tracks.length > 0) {
+      audioRef.current.play().catch(console.error)
     }
-    // Toggle play state (CD will spin even without songs for visual effect)
     setIsPlaying(!isPlaying)
   }
 
   const handleNext = () => {
-    if (songs.length === 0) return
-    setCurrentSongIndex((prev) => (prev + 1) % songs.length)
+    if (tracks.length === 0) return
+    setCurrentSongIndex((prev) => (prev + 1) % tracks.length)
   }
 
   const handlePrev = () => {
-    if (songs.length === 0) return
-    setCurrentSongIndex((prev) => (prev - 1 + songs.length) % songs.length)
+    if (tracks.length === 0) return
+    setCurrentSongIndex((prev) => (prev - 1 + tracks.length) % tracks.length)
   }
 
   return (
@@ -120,96 +119,100 @@ export function CDPlayer({
         <meshBasicMaterial transparent opacity={0} depthWrite={false} />
       </mesh>
 
-      {/* Song info display - floating above the player */}
-      <Html position={[0, 1, 0]} center>
-        <div
-          style={{
-            background: 'rgba(0, 0, 0, 0.7)',
-            color: '#00bfff',
-            fontFamily: 'monospace',
-            fontSize: '12px',
-            textAlign: 'center',
-            padding: '8px 12px',
-            borderRadius: '4px',
-            pointerEvents: 'none',
-            userSelect: 'none',
-            whiteSpace: 'nowrap',
-          }}
-        >
-          {currentSong ? (
-            <>
-              <div style={{ fontWeight: 'bold', marginBottom: '2px' }}>
-                {currentSong.title}
-              </div>
-              <div style={{ fontSize: '10px', opacity: 0.8 }}>
-                {currentSong.artist}
-              </div>
-              <div style={{ fontSize: '10px', marginTop: '4px' }}>
-                {isPlaying ? '▶ Playing' : '⏸ Paused'}
-              </div>
-            </>
-          ) : (
-            <div>Click to play</div>
-          )}
-        </div>
-      </Html>
+      {/* LCD Housing - 3D bezel attached to front of CD player */}
+      <group position={[0, 0.15, 0.85]} rotation={[-Math.PI / 6, 0, 0]}>
+        {/* Outer housing/bezel */}
+        <mesh position={[0, 0, 0.02]}>
+          <boxGeometry args={[0.8, 0.35, 0.06]} />
+          <meshStandardMaterial color="#1a1a1a" metalness={0.3} roughness={0.7} />
+        </mesh>
+        {/* Inner recessed area - the screen */}
+        <mesh position={[0, 0, 0.045]}>
+          <boxGeometry args={[0.7, 0.25, 0.02]} />
+          <meshBasicMaterial color="#001a33" />
+        </mesh>
+      </group>
 
-      {/* Previous button - overlaid on model */}
-      <Html position={[-0.15, 0.15, 0.35]} center transform>
-        <button
-          onClick={(e) => { e.stopPropagation(); handlePrev() }}
-          style={{
-            background: 'rgba(0,0,0,0.5)',
-            color: 'white',
-            border: 'none',
-            width: '24px',
-            height: '24px',
-            cursor: 'pointer',
-            fontSize: '12px',
-            borderRadius: '4px',
-          }}
+      {/* LCD Screen content - 3D text anchored to the housing */}
+      <group position={[0, 0.15, 0.92]} rotation={[-Math.PI / 6, 0, 0]}>
+        {/* Song title */}
+        <Text
+          position={[0, 0.05, 0]}
+          fontSize={0.055}
+          color="#00ccff"
+          anchorX="center"
+          anchorY="middle"
+          maxWidth={0.65}
+          textAlign="center"
         >
-          ⏮
-        </button>
-      </Html>
+          {currentTrack ? currentTrack.title.toUpperCase() : 'NO DISC'}
+          <meshBasicMaterial color="#00ccff" toneMapped={false} />
+        </Text>
 
-      {/* Play/Pause button - overlaid on model */}
-      <Html position={[0, 0.15, 0.35]} center transform>
-        <button
-          onClick={(e) => { e.stopPropagation(); handlePlayPause() }}
-          style={{
-            background: 'rgba(0,0,0,0.5)',
-            color: isPlaying ? '#00ff00' : 'white',
-            border: 'none',
-            width: '28px',
-            height: '28px',
-            cursor: 'pointer',
-            fontSize: '14px',
-            borderRadius: '4px',
-          }}
-        >
-          {isPlaying ? '⏸' : '▶'}
-        </button>
-      </Html>
+        {/* Artist name */}
+        {currentTrack && (
+          <Text
+            position={[0, -0.01, 0]}
+            fontSize={0.035}
+            color="#0099cc"
+            anchorX="center"
+            anchorY="middle"
+            maxWidth={0.65}
+            textAlign="center"
+          >
+            {currentTrack.artist.toUpperCase()}
+            <meshBasicMaterial color="#0099cc" toneMapped={false} />
+          </Text>
+        )}
 
-      {/* Next button - overlaid on model */}
-      <Html position={[0.15, 0.15, 0.35]} center transform>
-        <button
-          onClick={(e) => { e.stopPropagation(); handleNext() }}
-          style={{
-            background: 'rgba(0,0,0,0.5)',
-            color: 'white',
-            border: 'none',
-            width: '24px',
-            height: '24px',
-            cursor: 'pointer',
-            fontSize: '12px',
-            borderRadius: '4px',
-          }}
-        >
-          ⏭
-        </button>
-      </Html>
+        {/* Control row: Prev | Play/Pause | Next */}
+        <group position={[0, -0.08, 0]}>
+          {/* Previous button */}
+          <Text
+            position={[-0.15, 0, 0.01]}
+            fontSize={0.04}
+            color="#00ccff"
+            anchorX="center"
+            anchorY="middle"
+            onClick={(e) => { e.stopPropagation(); handlePrev() }}
+            onPointerOver={() => { document.body.style.cursor = 'pointer' }}
+            onPointerOut={() => { document.body.style.cursor = 'default' }}
+          >
+            {'<<'}
+            <meshBasicMaterial color="#00ccff" toneMapped={false} />
+          </Text>
+
+          {/* Play/Pause button */}
+          <Text
+            position={[0, 0, 0.01]}
+            fontSize={0.035}
+            color={isPlaying ? '#00ff88' : '#00ccff'}
+            anchorX="center"
+            anchorY="middle"
+            onClick={(e) => { e.stopPropagation(); handlePlayPause() }}
+            onPointerOver={() => { document.body.style.cursor = 'pointer' }}
+            onPointerOut={() => { document.body.style.cursor = 'default' }}
+          >
+            {isPlaying ? 'PAUSE' : 'PLAY'}
+            <meshBasicMaterial color={isPlaying ? '#00ff88' : '#00ccff'} toneMapped={false} />
+          </Text>
+
+          {/* Next button */}
+          <Text
+            position={[0.15, 0, 0.01]}
+            fontSize={0.04}
+            color="#00ccff"
+            anchorX="center"
+            anchorY="middle"
+            onClick={(e) => { e.stopPropagation(); handleNext() }}
+            onPointerOver={() => { document.body.style.cursor = 'pointer' }}
+            onPointerOut={() => { document.body.style.cursor = 'default' }}
+          >
+            {'>>'}
+            <meshBasicMaterial color="#00ccff" toneMapped={false} />
+          </Text>
+        </group>
+      </group>
     </group>
   )
 }

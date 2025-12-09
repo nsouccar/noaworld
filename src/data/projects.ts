@@ -9,5 +9,28 @@ export interface Project {
 }
 
 export const projects: Project[] = [
-  // Add your projects here
+  {
+    id: 'constellation-of-people',
+    title: 'Constellation of People',
+    description: 'Mapping twitter communities overtime',
+    image: '/textures/cop.png',
+    liveUrl: 'https://constellationofpeople.com/',
+    monitor: 1,
+  },
+  {
+    id: 'synthchronicity',
+    title: 'SYNTHCHRONICITY',
+    description: 'Learn how to make your own synths!',
+    image: '/textures/synth.png',
+    liveUrl: 'https://synthchronicity.io/',
+    monitor: 2,
+  },
+  {
+    id: 'settlekit',
+    title: 'SettleKit',
+    description: 'Designed and built the entire MVP for Antler backed immigration startup.',
+    image: '/textures/settlekit.png',
+    liveUrl: 'https://settlekit-frontend.vercel.app',
+    monitor: 3,
+  },
 ]

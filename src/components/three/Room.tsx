@@ -1,23 +1,20 @@
-import { useGLTF } from '@react-three/drei'
 import RoomShell from './RoomShell'
 import Furniture from './Furniture'
 import Posters from './Posters'
 import Window from './Window'
 import { CDPlayer } from './CDPlayer'
+import { FloatingLabels } from './FloatingLabels'
+import { Guitar } from './Guitar'
+import { WalkingDog } from './WalkingDog'
+import { type Hotspot } from '../../data/hotspots'
 
-function Guitar() {
-  const { scene } = useGLTF('/objects/guitar.glb')
-  return (
-    <primitive
-      object={scene}
-      position={[0, 0.1, 0]}
-      scale={0.5}
-      rotation={[-Math.PI / 2, 0, -Math.PI / 4]}
-    />
-  )
+interface RoomProps {
+  onSelectHotspot: (hotspot: Hotspot) => void
+  currentHotspotId: string
+  isTransitioning: boolean
 }
 
-export default function Room() {
+export default function Room({ onSelectHotspot, currentHotspotId, isTransitioning }: RoomProps) {
   return (
     <group>
       {/* Dim ambient light for nighttime */}
@@ -45,8 +42,18 @@ export default function Room() {
       {/* CD Player on the floor */}
       <CDPlayer position={[-1.4, 0.15, -0.5]} scale={0.4} />
 
-      {/* Guitar on floor */}
-      <Guitar />
+      {/* Guitar lying on carpet */}
+      <Guitar position={[0, 0.05, -0.5]} rotation={[-Math.PI / 2, 0, 0.3]} scale={0.5} />
+
+      {/* Lev walking in */}
+      <WalkingDog />
+
+      {/* Floating labels above hotspots */}
+      <FloatingLabels
+        onSelectHotspot={onSelectHotspot}
+        currentHotspotId={currentHotspotId}
+        isTransitioning={isTransitioning}
+      />
     </group>
   )
 }
