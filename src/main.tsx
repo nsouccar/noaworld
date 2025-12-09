@@ -4,6 +4,7 @@ import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 import Landing from './routes/Landing'
 import ThreeDRoom from './routes/ThreeDRoom'
 import ClassicPortfolio from './routes/ClassicPortfolio'
+import Resume from './routes/Resume'
 import './index.css'
 
 const router = createBrowserRouter([
@@ -18,6 +19,10 @@ const router = createBrowserRouter([
   {
     path: '/classic',
     element: <ClassicPortfolio />
+  },
+  {
+    path: '/resume',
+    element: <Resume />
   }
 ])
 

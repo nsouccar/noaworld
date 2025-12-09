@@ -23,8 +23,9 @@ export function FloatingLabels({ onSelectHotspot, currentHotspotId, isTransition
             follow={true}
           >
             <Text
+              font="/gc-romans-flower-demo/GC Romans Flower.ttf"
               fontSize={0.12}
-              color={isActive ? '#00bfff' : '#ffffff'}
+              color={isActive ? '#ffb6c1' : '#ffffff'}
               anchorX="center"
               anchorY="middle"
               outlineWidth={0.008}
@@ -43,7 +44,7 @@ export function FloatingLabels({ onSelectHotspot, currentHotspotId, isTransition
               }}
             >
               {hotspot.label}
-              <meshBasicMaterial color={isActive ? '#00bfff' : '#ffffff'} toneMapped={false} />
+              <meshBasicMaterial color={isActive ? '#ffb6c1' : '#ffffff'} toneMapped={false} />
             </Text>
           </Billboard>
         )

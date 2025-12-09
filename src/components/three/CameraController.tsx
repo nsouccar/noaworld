@@ -109,17 +109,19 @@ export function CameraController({
   return (
     <OrbitControls
       ref={controlsRef}
-      enablePan={true}
+      enablePan={false} // Disable panning to keep view centered
       enableZoom={true}
       enableRotate={true}
-      panSpeed={0.5}
       rotateSpeed={0.5}
       zoomSpeed={0.8}
       minDistance={0.5}
-      maxDistance={5}
-      // Limit vertical rotation to prevent flipping
-      maxPolarAngle={Math.PI * 0.85}
-      minPolarAngle={Math.PI * 0.05}
+      maxDistance={3} // Allow stepping back a bit
+      // Limit vertical rotation to prevent looking at ceiling/floor
+      maxPolarAngle={Math.PI * 0.55}
+      minPolarAngle={Math.PI * 0.45}
+      // Limit horizontal rotation to prevent looking outside
+      minAzimuthAngle={-Math.PI * 0.1}
+      maxAzimuthAngle={Math.PI * 0.1}
     />
   )
 }

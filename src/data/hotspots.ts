@@ -34,24 +34,12 @@ export const hotspots: Hotspot[] = [
   {
     id: 'radio',
     name: 'CD Player',
-    // Bird's eye view centered on the CD player
-    cameraPosition: new THREE.Vector3(-1.4, 2.0, -0.5),
-    lookAt: new THREE.Vector3(-1.4, 0.15, -0.5),
-    markerPosition: new THREE.Vector3(-0.8, 0.01, 0.3),
-    label: 'My Music',
-    labelPosition: new THREE.Vector3(-1.4, 0.8, -0.5),
-    // Auto-transition to front view after 2 seconds
-    autoTransitionTo: 'radio-front',
-    autoTransitionDelay: 2000,
-  },
-  {
-    id: 'radio-front',
-    name: 'CD Player',
     // Front view looking at the LCD screen
     cameraPosition: new THREE.Vector3(-1.4, 0.4, 0.4),
     lookAt: new THREE.Vector3(-1.4, 0.15, -0.3),
     markerPosition: new THREE.Vector3(-0.8, 0.01, 0.3),
-    hidden: true, // Don't show floor marker for this
+    label: 'My Music',
+    labelPosition: new THREE.Vector3(-1.4, 0.8, -0.5),
   },
   {
     id: 'desk',
@@ -62,6 +50,16 @@ export const hotspots: Hotspot[] = [
     markerPosition: new THREE.Vector3(-1.2, 0.01, -1.2),
     label: 'My Projects',
     labelPosition: new THREE.Vector3(-1.3, 1.2, -2.0),
+  },
+  {
+    id: 'me',
+    name: 'Me',
+    // Looking at the picture frame on the nightstand
+    cameraPosition: new THREE.Vector3(0.4, 1.2, -1.3),
+    lookAt: new THREE.Vector3(0.4, 0.6, -2.3),
+    markerPosition: new THREE.Vector3(0.4, 0.01, -1.5),
+    label: 'Me',
+    labelPosition: new THREE.Vector3(0.4, 0.95, -2.3),
   },
 ]
 

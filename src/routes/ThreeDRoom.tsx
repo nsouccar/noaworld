@@ -1,11 +1,91 @@
 import { useState, useCallback, useEffect, useRef } from 'react'
 import { Canvas } from '@react-three/fiber'
+import { useProgress } from '@react-three/drei'
 import Room from '../components/three/Room'
 import { CameraController } from '../components/three/CameraController'
 import { visibleHotspots, defaultHotspot, getHotspotById, type Hotspot } from '../data/hotspots'
+import * as THREE from 'three'
+
+// Loading screen component
+function LoadingScreen() {
+  const { progress, active } = useProgress()
+  const [visible, setVisible] = useState(true)
+
+  useEffect(() => {
+    if (!active && progress === 100) {
+      // Fade out after loading complete
+      const timer = setTimeout(() => setVisible(false), 500)
+      return () => clearTimeout(timer)
+    }
+  }, [active, progress])
+
+  if (!visible) return null
+
+  return (
+    <div
+      style={{
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        background: '#000',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 100,
+        opacity: active ? 1 : 0,
+        transition: 'opacity 0.5s ease-out',
+        pointerEvents: active ? 'auto' : 'none',
+      }}
+    >
+      <div
+        style={{
+          width: '200px',
+          height: '2px',
+          background: 'rgba(255, 255, 255, 0.2)',
+          borderRadius: '1px',
+          overflow: 'hidden',
+        }}
+      >
+        <div
+          style={{
+            width: `${progress}%`,
+            height: '100%',
+            background: '#ffb6c1',
+            transition: 'width 0.1s ease-out',
+          }}
+        />
+      </div>
+      <div
+        style={{
+          fontFamily: "'GC Romans Flower', monospace",
+          color: 'rgba(255, 255, 255, 0.5)',
+          fontSize: '12px',
+          marginTop: '10px',
+        }}
+      >
+        {Math.round(progress)}%
+      </div>
+    </div>
+  )
+}
+
+// Intro hotspot - starting outside the room
+const introHotspot: Hotspot = {
+  id: 'intro',
+  name: 'Outside',
+  cameraPosition: new THREE.Vector3(0, 1.6, 5),
+  lookAt: new THREE.Vector3(0, 1.0, -1.0),
+  markerPosition: new THREE.Vector3(0, 0, 0),
+  hidden: true,
+}
 
 export default function ThreeDRoom() {
-  const [currentHotspot, setCurrentHotspot] = useState<Hotspot>(defaultHotspot)
+  const [isIntro, setIsIntro] = useState(true)
+  const [fadeOpacity, setFadeOpacity] = useState(1)
+  const [currentHotspot, setCurrentHotspot] = useState<Hotspot>(introHotspot)
   const [isTransitioning, setIsTransitioning] = useState(false)
 
   const handleSelectHotspot = useCallback((hotspot: Hotspot) => {
@@ -19,6 +99,12 @@ export default function ThreeDRoom() {
   const handleTransitionComplete = useCallback(() => {
     setIsTransitioning(false)
 
+    // If we just finished the intro, mark it complete
+    if (isIntro) {
+      setIsIntro(false)
+      return
+    }
+
     // Check if current hotspot has auto-transition
     if (currentHotspot.autoTransitionTo) {
       const nextHotspot = getHotspotById(currentHotspot.autoTransitionTo)
@@ -30,7 +116,28 @@ export default function ThreeDRoom() {
         }, delay)
       }
     }
-  }, [currentHotspot])
+  }, [currentHotspot, isIntro])
+
+  // Intro sequence: fade in, then walk into the room
+  useEffect(() => {
+    if (!isIntro) return
+
+    // Start with black screen, fade in over 0.5s
+    const fadeInTimer = setTimeout(() => {
+      setFadeOpacity(0)
+    }, 100)
+
+    // After fade completes, start walking into the room
+    const walkInTimer = setTimeout(() => {
+      setIsTransitioning(true)
+      setCurrentHotspot(defaultHotspot)
+    }, 800)
+
+    return () => {
+      clearTimeout(fadeInTimer)
+      clearTimeout(walkInTimer)
+    }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Clean up timer on unmount or when hotspot changes
   useEffect(() => {
@@ -45,7 +152,7 @@ export default function ThreeDRoom() {
     <div style={{ width: '100%', height: '100vh', position: 'relative' }}>
       <Canvas
         camera={{
-          position: defaultHotspot.cameraPosition.toArray() as [number, number, number],
+          position: introHotspot.cameraPosition.toArray() as [number, number, number],
           fov: 50,
         }}
       >
@@ -61,6 +168,7 @@ export default function ThreeDRoom() {
           currentHotspotId={currentHotspot.id}
           isTransitioning={isTransitioning}
         />
+
       </Canvas>
 
       {/* Current location indicator */}
@@ -70,10 +178,10 @@ export default function ThreeDRoom() {
           bottom: '20px',
           left: '20px',
           background: 'rgba(0, 0, 0, 0.7)',
-          color: '#00bfff',
+          color: '#ffb6c1',
           padding: '12px 16px',
           borderRadius: '8px',
-          fontFamily: 'monospace',
+          fontFamily: "'GC Romans Flower', monospace",
           fontSize: '14px',
         }}
       >
@@ -104,12 +212,12 @@ export default function ThreeDRoom() {
               onClick={() => handleSelectHotspot(hotspot)}
               disabled={isActive || isTransitioning}
               style={{
-                background: isActive ? 'rgba(0, 191, 255, 0.3)' : 'rgba(0, 0, 0, 0.7)',
-                color: isActive ? '#00bfff' : '#ffffff',
-                border: isActive ? '1px solid #00bfff' : '1px solid rgba(255, 255, 255, 0.3)',
+                background: isActive ? 'rgba(255, 182, 193, 0.3)' : 'rgba(0, 0, 0, 0.7)',
+                color: isActive ? '#ffb6c1' : '#ffffff',
+                border: isActive ? '1px solid #ffb6c1' : '1px solid rgba(255, 255, 255, 0.3)',
                 padding: '8px 12px',
                 borderRadius: '4px',
-                fontFamily: 'monospace',
+                fontFamily: "'GC Romans Flower', monospace",
                 fontSize: '12px',
                 cursor: isActive || isTransitioning ? 'default' : 'pointer',
                 opacity: isTransitioning ? 0.5 : 1,
@@ -121,6 +229,24 @@ export default function ThreeDRoom() {
           )
         })}
       </div>
+
+      {/* Fade overlay for intro */}
+      <div
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: '#000',
+          opacity: fadeOpacity,
+          transition: 'opacity 0.7s ease-out',
+          pointerEvents: 'none',
+        }}
+      />
+
+      {/* Loading screen */}
+      <LoadingScreen />
     </div>
   )
 }

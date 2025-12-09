@@ -1,4 +1,5 @@
-import { useTexture } from '@react-three/drei'
+import { useState } from 'react'
+import { useTexture, Html } from '@react-three/drei'
 import { posters, type Poster, type Wall } from '../../data/posters'
 
 // Room dimensions
@@ -27,6 +28,7 @@ const WALL_CONFIG: Record<Wall, { getPosition: (h: number, v: number) => [number
 
 // Single poster component
 function PosterMesh({ poster }: { poster: Poster }) {
+  const [hovered, setHovered] = useState(false)
   const width = poster.width || 0.4
   const height = poster.height || 0.5
   const texture = useTexture(poster.image)
@@ -34,11 +36,59 @@ function PosterMesh({ poster }: { poster: Poster }) {
   const config = WALL_CONFIG[poster.wall]
   const position = config.getPosition(poster.position[0], poster.position[1])
 
+  const handleClick = () => {
+    if (poster.externalUrl) {
+      window.open(poster.externalUrl, '_blank')
+    }
+  }
+
   return (
-    <mesh position={position} rotation={config.rotation}>
-      <planeGeometry args={[width, height]} />
-      <meshStandardMaterial map={texture} />
-    </mesh>
+    <group position={position} rotation={config.rotation}>
+      <mesh
+        onClick={(e) => { e.stopPropagation(); handleClick() }}
+        onPointerOver={() => {
+          setHovered(true)
+          if (poster.externalUrl) document.body.style.cursor = 'pointer'
+        }}
+        onPointerOut={() => {
+          setHovered(false)
+          document.body.style.cursor = 'default'
+        }}
+      >
+        <planeGeometry args={[width, height]} />
+        <meshStandardMaterial
+          map={texture}
+          emissive={hovered ? '#ffffff' : '#000000'}
+          emissiveIntensity={hovered ? 0.15 : 0}
+        />
+      </mesh>
+
+      {/* Tooltip on hover */}
+      {hovered && (
+        <Html
+          position={[0, height / 2 + 0.1, 0.01]}
+          center
+          style={{ pointerEvents: 'none' }}
+        >
+          <div
+            style={{
+              background: 'rgba(0, 0, 0, 0.85)',
+              padding: '8px 12px',
+              borderRadius: '4px',
+              fontFamily: "'GC Romans Flower', system-ui, sans-serif",
+              whiteSpace: 'nowrap',
+            }}
+          >
+            <div style={{ color: '#ffffff', fontSize: '14px' }}>{poster.title}</div>
+            {poster.externalUrl && (
+              <div style={{ color: '#888', fontSize: '11px', marginTop: '4px' }}>
+                click to visit
+              </div>
+            )}
+          </div>
+        </Html>
+      )}
+    </group>
   )
 }
 
