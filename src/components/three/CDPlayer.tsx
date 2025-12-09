@@ -126,10 +126,16 @@ export function CDPlayer({
           <boxGeometry args={[0.8, 0.35, 0.06]} />
           <meshStandardMaterial color="#1a1a1a" metalness={0.3} roughness={0.7} />
         </mesh>
-        {/* Inner recessed area - the screen */}
+        {/* Inner recessed area - the LCD screen with blue backlight effect */}
         <mesh position={[0, 0, 0.045]}>
           <boxGeometry args={[0.7, 0.25, 0.02]} />
-          <meshBasicMaterial color="#001a33" />
+          <meshStandardMaterial
+            color="#0a2a4a"
+            emissive="#003366"
+            emissiveIntensity={0.3}
+            metalness={0.1}
+            roughness={0.8}
+          />
         </mesh>
       </group>
 
@@ -137,6 +143,7 @@ export function CDPlayer({
       <group position={[0, 0.15, 0.92]} rotation={[-Math.PI / 6, 0, 0]}>
         {/* Song title */}
         <Text
+          font="/ds_digital/DS-DIGI.TTF"
           position={[0, 0.05, 0]}
           fontSize={0.055}
           color="#00ccff"
@@ -152,6 +159,7 @@ export function CDPlayer({
         {/* Artist name */}
         {currentTrack && (
           <Text
+            font="/ds_digital/DS-DIGI.TTF"
             position={[0, -0.01, 0]}
             fontSize={0.035}
             color="#0099cc"
@@ -169,6 +177,7 @@ export function CDPlayer({
         <group position={[0, -0.08, 0]}>
           {/* Previous button */}
           <Text
+            font="/ds_digital/DS-DIGI.TTF"
             position={[-0.15, 0, 0.01]}
             fontSize={0.04}
             color="#00ccff"
@@ -184,6 +193,7 @@ export function CDPlayer({
 
           {/* Play/Pause button */}
           <Text
+            font="/ds_digital/DS-DIGI.TTF"
             position={[0, 0, 0.01]}
             fontSize={0.035}
             color={isPlaying ? '#00ff88' : '#00ccff'}
@@ -199,6 +209,7 @@ export function CDPlayer({
 
           {/* Next button */}
           <Text
+            font="/ds_digital/DS-DIGI.TTF"
             position={[0.15, 0, 0.01]}
             fontSize={0.04}
             color="#00ccff"

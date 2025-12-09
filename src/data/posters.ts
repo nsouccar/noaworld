@@ -45,7 +45,7 @@ export const posters: Poster[] = [
   {
     id: 'hell-is-a-teenage-girl',
     title: 'Hell is a Teenage Girl',
-    image: '/textures/band1.png',
+    image: '/textures/band1.jpg',
     wall: 'left',
     position: [-1.0, 1.5], // closer to monitors than new-lows
     width: 0.6,

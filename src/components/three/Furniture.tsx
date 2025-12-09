@@ -186,6 +186,25 @@ function MacBook({
   )
 }
 
+// Picture frame component
+function PictureFrame({ position }: { position: [number, number, number] }) {
+  const { scene } = useGLTF('/objects/photoframe.glb')
+  const texture = useTexture('/textures/me.jpg')
+
+  return (
+    <group position={position}>
+      <primitive object={scene} scale={0.15} />
+      {/* Picture inside frame - angled back to match frame */}
+      <mesh position={[0, 0.01, 0.03]} rotation={[-Math.PI / 12, 0, 0]}>
+        <planeGeometry args={[0.18, 0.22]} />
+        <meshBasicMaterial map={texture} toneMapped={false} />
+      </mesh>
+    </group>
+  )
+}
+
+useGLTF.preload('/objects/photoframe.glb')
+
 // Equipment positioned on desk surface
 function DeskEquipment() {
   // Get projects by monitor number
@@ -353,7 +372,27 @@ export function Nightstand() {
       </mesh>
 
       {/* Books stacked on top */}
-      <BookStack position={[0, height + topThickness / 2, 0]} />
+      <BookStack position={[-0.08, height + topThickness / 2, 0]} />
+
+      {/* Picture frame next to books */}
+      <PictureFrame position={[0.1, height + topThickness / 2 + 0.09, 0]} />
+
+      {/* CV link text laid flat on nightstand */}
+      <Text
+        font="/gc-romans-flower-demo/GC Romans Flower.ttf"
+        position={[0.1, height + topThickness / 2 + 0.005, 0.1]}
+        rotation={[-Math.PI / 2, 0, 0]}
+        fontSize={0.035}
+        color="#ff4444"
+        anchorX="center"
+        anchorY="middle"
+        onClick={() => window.open('/resume', '_blank')}
+        onPointerOver={() => { document.body.style.cursor = 'pointer' }}
+        onPointerOut={() => { document.body.style.cursor = 'default' }}
+      >
+        see my cv
+        <meshBasicMaterial color="#ff4444" toneMapped={false} />
+      </Text>
     </group>
   )
 }
@@ -374,7 +413,7 @@ export function Lamp() {
       <pointLight
         position={[0, 1.8, 0]}
         color="#ffaa55"
-        intensity={6}
+        intensity={3}
         distance={0}
         decay={1}
       />
