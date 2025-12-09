@@ -1,10 +1,79 @@
 import { useEffect } from 'react'
-import { useGLTF, useTexture } from '@react-three/drei'
+import { useGLTF, useTexture, Text } from '@react-three/drei'
 import * as THREE from 'three'
 import { books, type Book } from '../../data/books'
+import { projects, type Project } from '../../data/projects'
+
+// Monitor screen content component
+function MonitorScreen({
+  project,
+  screenWidth,
+  screenHeight
+}: {
+  project?: Project
+  screenWidth: number
+  screenHeight: number
+}) {
+  // Load texture if project has an image
+  const texture = project?.image ? useTexture(project.image) : null
+
+  const handleClick = () => {
+    if (project?.liveUrl) {
+      window.open(project.liveUrl, '_blank')
+    }
+  }
+
+  if (!project) {
+    // Empty screen
+    return (
+      <mesh position={[0, 0, 0.001]}>
+        <planeGeometry args={[screenWidth, screenHeight]} />
+        <meshStandardMaterial color="#111111" emissive="#222233" emissiveIntensity={0.3} />
+      </mesh>
+    )
+  }
+
+  return (
+    <group>
+      {/* Screen with project image */}
+      <mesh
+        position={[0, 0, 0.001]}
+        onClick={(e) => { e.stopPropagation(); handleClick() }}
+        onPointerOver={() => { document.body.style.cursor = 'pointer' }}
+        onPointerOut={() => { document.body.style.cursor = 'default' }}
+      >
+        <planeGeometry args={[screenWidth, screenHeight]} />
+        {texture ? (
+          <meshBasicMaterial map={texture} toneMapped={false} />
+        ) : (
+          <meshStandardMaterial color="#111111" emissive="#222233" emissiveIntensity={0.3} />
+        )}
+      </mesh>
+
+      {/* Title overlay at bottom */}
+      <Text
+        position={[0, -screenHeight / 2 + 0.03, 0.002]}
+        fontSize={0.025}
+        color="#ffffff"
+        anchorX="center"
+        anchorY="middle"
+        maxWidth={screenWidth - 0.02}
+      >
+        {project.title}
+        <meshBasicMaterial color="#ffffff" transparent opacity={0.9} />
+      </Text>
+    </group>
+  )
+}
 
 // Monitor component - thin display with bezel and stand
-function Monitor({ position }: { position: [number, number, number] }) {
+function Monitor({
+  position,
+  project
+}: {
+  position: [number, number, number]
+  project?: Project
+}) {
   const screenWidth = 0.6
   const screenHeight = 0.38
   const bezelThickness = 0.015
@@ -18,11 +87,10 @@ function Monitor({ position }: { position: [number, number, number] }) {
         <meshStandardMaterial color="#1a1a1a" />
       </mesh>
 
-      {/* Screen */}
-      <mesh position={[0, 0, screenDepth / 2 + 0.001]}>
-        <planeGeometry args={[screenWidth, screenHeight]} />
-        <meshStandardMaterial color="#111111" emissive="#222233" emissiveIntensity={0.3} />
-      </mesh>
+      {/* Screen content */}
+      <group position={[0, 0, screenDepth / 2]}>
+        <MonitorScreen project={project} screenWidth={screenWidth} screenHeight={screenHeight} />
+      </group>
 
       {/* Stand neck */}
       <mesh position={[0, -screenHeight / 2 - 0.05, -0.02]}>
@@ -40,13 +108,28 @@ function Monitor({ position }: { position: [number, number, number] }) {
 }
 
 // MacBook component - laptop with angled screen
-function MacBook({ position }: { position: [number, number, number] }) {
+function MacBook({
+  position,
+  project
+}: {
+  position: [number, number, number]
+  project?: Project
+}) {
   const baseWidth = 0.45
   const baseDepth = 0.3
   const baseHeight = 0.015
   const screenWidth = 0.42
   const screenHeight = 0.27
-  const screenAngle = -Math.PI * 0.35 // Tilted back ~63 degrees
+  const screenAngle = 0 // Screen standing straight up, perpendicular to keyboard
+
+  // Load texture if project has an image
+  const texture = project?.image ? useTexture(project.image) : null
+
+  const handleClick = () => {
+    if (project?.liveUrl) {
+      window.open(project.liveUrl, '_blank')
+    }
+  }
 
   return (
     <group position={position}>
@@ -70,10 +153,34 @@ function MacBook({ position }: { position: [number, number, number] }) {
         </mesh>
 
         {/* Screen */}
-        <mesh position={[0, screenHeight / 2 + 0.01, 0.003]}>
+        <mesh
+          position={[0, screenHeight / 2 + 0.01, 0.003]}
+          onClick={project ? (e) => { e.stopPropagation(); handleClick() } : undefined}
+          onPointerOver={project ? () => { document.body.style.cursor = 'pointer' } : undefined}
+          onPointerOut={project ? () => { document.body.style.cursor = 'default' } : undefined}
+        >
           <planeGeometry args={[screenWidth, screenHeight]} />
-          <meshStandardMaterial color="#111111" emissive="#222233" emissiveIntensity={0.3} />
+          {texture ? (
+            <meshBasicMaterial map={texture} toneMapped={false} />
+          ) : (
+            <meshStandardMaterial color="#111111" emissive="#222233" emissiveIntensity={0.3} />
+          )}
         </mesh>
+
+        {/* Title overlay at bottom */}
+        {project && (
+          <Text
+            position={[0, 0.03, 0.004]}
+            fontSize={0.018}
+            color="#ffffff"
+            anchorX="center"
+            anchorY="middle"
+            maxWidth={screenWidth - 0.02}
+          >
+            {project.title}
+            <meshBasicMaterial color="#ffffff" transparent opacity={0.9} />
+          </Text>
+        )}
       </group>
     </group>
   )
@@ -81,17 +188,22 @@ function MacBook({ position }: { position: [number, number, number] }) {
 
 // Equipment positioned on desk surface
 function DeskEquipment() {
+  // Get projects by monitor number
+  const monitor1Project = projects.find(p => p.monitor === 1)
+  const monitor2Project = projects.find(p => p.monitor === 2)
+  const monitor3Project = projects.find(p => p.monitor === 3)
+
   return (
-    <group position={[1.0, 0.7, 0.2]}>
+    <group position={[1.0, 0.6, 0.2]}>
       {/* Left monitor */}
-      <Monitor position={[-0.35, 0.22, 0]} />
+      <Monitor position={[-0.35, 0.30, 0]} project={monitor1Project} />
 
       {/* Right monitor */}
-      <Monitor position={[0.35, 0.22, 0]} />
+      <Monitor position={[0.35, 0.30, 0]} project={monitor2Project} />
 
       {/* MacBook in center, slightly forward */}
-      <group position={[0, 0.04, 0.5]} rotation={[0, Math.PI / 8, 0]}>
-        <MacBook position={[0, 0, 0]} />
+      <group position={[0.1, 0.0, 0.65]} rotation={[0, 0, 0]}>
+        <MacBook position={[0, 0, 0]} project={monitor3Project} />
       </group>
     </group>
   )

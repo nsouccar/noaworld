@@ -1,62 +1,126 @@
-import { useRef } from 'react'
-import { Canvas, useFrame } from '@react-three/fiber'
-import { OrbitControls } from '@react-three/drei'
-import type { OrbitControls as OrbitControlsType } from 'three-stdlib'
-import * as THREE from 'three'
+import { useState, useCallback, useEffect, useRef } from 'react'
+import { Canvas } from '@react-three/fiber'
 import Room from '../components/three/Room'
-
-// Room bounds (slightly inset from walls)
-// Room is 4x5 with 2.5 height
-const BOUNDS = {
-  minX: -1.5,
-  maxX: 1.5,
-  minY: 0.5,
-  maxY: 2.2,
-  minZ: -2,
-  maxZ: 2,
-}
-
-function CameraConstraint() {
-  const controlsRef = useRef<OrbitControlsType>(null)
-
-  useFrame(({ camera }) => {
-    // Clamp camera position to room bounds
-    camera.position.x = THREE.MathUtils.clamp(camera.position.x, BOUNDS.minX, BOUNDS.maxX)
-    camera.position.y = THREE.MathUtils.clamp(camera.position.y, BOUNDS.minY, BOUNDS.maxY)
-    camera.position.z = THREE.MathUtils.clamp(camera.position.z, BOUNDS.minZ, BOUNDS.maxZ)
-
-    // Also clamp the orbit target so it stays in the room
-    if (controlsRef.current) {
-      const target = controlsRef.current.target
-      target.x = THREE.MathUtils.clamp(target.x, BOUNDS.minX, BOUNDS.maxX)
-      target.y = THREE.MathUtils.clamp(target.y, BOUNDS.minY, BOUNDS.maxY)
-      target.z = THREE.MathUtils.clamp(target.z, BOUNDS.minZ, BOUNDS.maxZ)
-    }
-  })
-
-  // TEMP: Target the CD player
-  return (
-    <OrbitControls
-      ref={controlsRef}
-      enableDamping
-      dampingFactor={0.1}
-      maxDistance={3}
-      minDistance={0.3}
-      maxPolarAngle={Math.PI * 0.85}
-      minPolarAngle={0}
-      target={[-1, 0.15, -1]}
-    />
-  )
-}
+import { CameraController } from '../components/three/CameraController'
+import { visibleHotspots, defaultHotspot, getHotspotById, type Hotspot } from '../data/hotspots'
 
 export default function ThreeDRoom() {
+  const [currentHotspot, setCurrentHotspot] = useState<Hotspot>(defaultHotspot)
+  const [isTransitioning, setIsTransitioning] = useState(false)
+
+  const handleSelectHotspot = useCallback((hotspot: Hotspot) => {
+    if (hotspot.id === currentHotspot.id || isTransitioning) return
+    setIsTransitioning(true)
+    setCurrentHotspot(hotspot)
+  }, [currentHotspot.id, isTransitioning])
+
+  const autoTransitionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const handleTransitionComplete = useCallback(() => {
+    setIsTransitioning(false)
+
+    // Check if current hotspot has auto-transition
+    if (currentHotspot.autoTransitionTo) {
+      const nextHotspot = getHotspotById(currentHotspot.autoTransitionTo)
+      if (nextHotspot) {
+        const delay = currentHotspot.autoTransitionDelay || 2000
+        autoTransitionTimerRef.current = setTimeout(() => {
+          setIsTransitioning(true)
+          setCurrentHotspot(nextHotspot)
+        }, delay)
+      }
+    }
+  }, [currentHotspot])
+
+  // Clean up timer on unmount or when hotspot changes
+  useEffect(() => {
+    return () => {
+      if (autoTransitionTimerRef.current) {
+        clearTimeout(autoTransitionTimerRef.current)
+      }
+    }
+  }, [currentHotspot])
+
   return (
-    <div style={{ width: '100%', height: '100vh' }}>
-      {/* TEMP: Bird's eye view of CD player at [-1, 0.15, -1] */}
-      <Canvas camera={{ position: [-1, 2.2, -1], fov: 50 }}>
-        <CameraConstraint />
-        <Room />
+    <div style={{ width: '100%', height: '100vh', position: 'relative' }}>
+      <Canvas
+        camera={{
+          position: defaultHotspot.cameraPosition.toArray() as [number, number, number],
+          fov: 50,
+        }}
+      >
+        <CameraController
+          hotspot={currentHotspot}
+          onTransitionComplete={handleTransitionComplete}
+          moveSpeed={2}
+          enableHeadBob={true}
+        />
+
+        <Room
+          onSelectHotspot={handleSelectHotspot}
+          currentHotspotId={currentHotspot.id}
+          isTransitioning={isTransitioning}
+        />
       </Canvas>
+
+      {/* Current location indicator */}
+      <div
+        style={{
+          position: 'absolute',
+          bottom: '20px',
+          left: '20px',
+          background: 'rgba(0, 0, 0, 0.7)',
+          color: '#00bfff',
+          padding: '12px 16px',
+          borderRadius: '8px',
+          fontFamily: 'monospace',
+          fontSize: '14px',
+        }}
+      >
+        <div style={{ opacity: 0.7, fontSize: '10px', marginBottom: '4px' }}>
+          CURRENT LOCATION
+        </div>
+        <div>{currentHotspot.name}</div>
+      </div>
+
+      {/* Hotspot navigation buttons */}
+      <div
+        style={{
+          position: 'absolute',
+          bottom: '20px',
+          right: '20px',
+          display: 'flex',
+          gap: '8px',
+          flexWrap: 'wrap',
+          maxWidth: '300px',
+          justifyContent: 'flex-end',
+        }}
+      >
+        {visibleHotspots.map((hotspot) => {
+          const isActive = hotspot.id === currentHotspot.id || hotspot.name === currentHotspot.name
+          return (
+            <button
+              key={hotspot.id}
+              onClick={() => handleSelectHotspot(hotspot)}
+              disabled={isActive || isTransitioning}
+              style={{
+                background: isActive ? 'rgba(0, 191, 255, 0.3)' : 'rgba(0, 0, 0, 0.7)',
+                color: isActive ? '#00bfff' : '#ffffff',
+                border: isActive ? '1px solid #00bfff' : '1px solid rgba(255, 255, 255, 0.3)',
+                padding: '8px 12px',
+                borderRadius: '4px',
+                fontFamily: 'monospace',
+                fontSize: '12px',
+                cursor: isActive || isTransitioning ? 'default' : 'pointer',
+                opacity: isTransitioning ? 0.5 : 1,
+                transition: 'all 0.2s ease',
+              }}
+            >
+              {hotspot.name}
+            </button>
+          )
+        })}
+      </div>
     </div>
   )
 }
