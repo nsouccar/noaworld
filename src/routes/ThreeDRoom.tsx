@@ -168,7 +168,7 @@ export default function ThreeDRoom() {
       <Canvas
         camera={{
           position: introHotspot.cameraPosition.toArray() as [number, number, number],
-          fov: 50,
+          fov: isMobile ? 70 : 50,
         }}
       >
         <CameraController
@@ -176,6 +176,7 @@ export default function ThreeDRoom() {
           onTransitionComplete={handleTransitionComplete}
           moveSpeed={2}
           enableHeadBob={true}
+          isMobile={isMobile}
         />
 
         <Room
