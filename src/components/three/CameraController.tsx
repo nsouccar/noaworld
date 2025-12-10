@@ -122,6 +122,9 @@ export function CameraController({
       // Limit horizontal rotation to prevent looking outside
       minAzimuthAngle={-Math.PI * 0.1}
       maxAzimuthAngle={Math.PI * 0.1}
+      // Touch settings for mobile
+      enableDamping={true}
+      dampingFactor={0.1}
     />
   )
 }

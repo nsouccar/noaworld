@@ -82,11 +82,26 @@ const introHotspot: Hotspot = {
   hidden: true,
 }
 
+// Hook to detect mobile screen
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(false)
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768)
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
+
+  return isMobile
+}
+
 export default function ThreeDRoom() {
   const [isIntro, setIsIntro] = useState(true)
   const [fadeOpacity, setFadeOpacity] = useState(1)
   const [currentHotspot, setCurrentHotspot] = useState<Hotspot>(introHotspot)
   const [isTransitioning, setIsTransitioning] = useState(false)
+  const isMobile = useIsMobile()
 
   const handleSelectHotspot = useCallback((hotspot: Hotspot) => {
     if (hotspot.id === currentHotspot.id || isTransitioning) return
@@ -175,17 +190,17 @@ export default function ThreeDRoom() {
       <div
         style={{
           position: 'absolute',
-          bottom: '20px',
-          left: '20px',
+          bottom: isMobile ? '12px' : '20px',
+          left: isMobile ? '12px' : '20px',
           background: 'rgba(0, 0, 0, 0.7)',
           color: '#ffb6c1',
-          padding: '12px 16px',
+          padding: isMobile ? '10px 14px' : '12px 16px',
           borderRadius: '8px',
           fontFamily: "'GC Romans Flower', monospace",
-          fontSize: '14px',
+          fontSize: isMobile ? '12px' : '14px',
         }}
       >
-        <div style={{ opacity: 0.7, fontSize: '10px', marginBottom: '4px' }}>
+        <div style={{ opacity: 0.7, fontSize: isMobile ? '8px' : '10px', marginBottom: '4px' }}>
           CURRENT LOCATION
         </div>
         <div>{currentHotspot.name}</div>
@@ -195,12 +210,12 @@ export default function ThreeDRoom() {
       <div
         style={{
           position: 'absolute',
-          bottom: '20px',
-          right: '20px',
+          bottom: isMobile ? '12px' : '20px',
+          right: isMobile ? '12px' : '20px',
           display: 'flex',
-          gap: '8px',
+          gap: isMobile ? '6px' : '8px',
           flexWrap: 'wrap',
-          maxWidth: '300px',
+          maxWidth: isMobile ? '200px' : '300px',
           justifyContent: 'flex-end',
         }}
       >
@@ -215,13 +230,15 @@ export default function ThreeDRoom() {
                 background: isActive ? 'rgba(255, 182, 193, 0.3)' : 'rgba(0, 0, 0, 0.7)',
                 color: isActive ? '#ffb6c1' : '#ffffff',
                 border: isActive ? '1px solid #ffb6c1' : '1px solid rgba(255, 255, 255, 0.3)',
-                padding: '8px 12px',
+                padding: isMobile ? '10px 14px' : '8px 12px',
                 borderRadius: '4px',
                 fontFamily: "'GC Romans Flower', monospace",
-                fontSize: '12px',
+                fontSize: isMobile ? '11px' : '12px',
                 cursor: isActive || isTransitioning ? 'default' : 'pointer',
                 opacity: isTransitioning ? 0.5 : 1,
                 transition: 'all 0.2s ease',
+                // Ensure minimum touch target size on mobile
+                minHeight: isMobile ? '44px' : 'auto',
               }}
             >
               {hotspot.name}
