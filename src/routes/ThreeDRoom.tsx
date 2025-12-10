@@ -211,13 +211,17 @@ export default function ThreeDRoom() {
       <div
         style={{
           position: 'absolute',
-          bottom: isMobile ? '12px' : '20px',
-          right: isMobile ? '12px' : '20px',
+          // Mobile: right side, vertically centered. Desktop: bottom right
+          bottom: isMobile ? 'auto' : '20px',
+          top: isMobile ? '50%' : 'auto',
+          transform: isMobile ? 'translateY(-50%)' : 'none',
+          right: isMobile ? '8px' : '20px',
           display: 'flex',
-          gap: isMobile ? '6px' : '8px',
-          flexWrap: 'wrap',
-          maxWidth: isMobile ? '200px' : '300px',
-          justifyContent: 'flex-end',
+          flexDirection: isMobile ? 'column' : 'row',
+          gap: isMobile ? '8px' : '8px',
+          flexWrap: isMobile ? 'nowrap' : 'wrap',
+          maxWidth: isMobile ? 'auto' : '300px',
+          justifyContent: isMobile ? 'center' : 'flex-end',
         }}
       >
         {visibleHotspots.map((hotspot) => {
@@ -231,15 +235,17 @@ export default function ThreeDRoom() {
                 background: isActive ? 'rgba(255, 182, 193, 0.3)' : 'rgba(0, 0, 0, 0.7)',
                 color: isActive ? '#ffb6c1' : '#ffffff',
                 border: isActive ? '1px solid #ffb6c1' : '1px solid rgba(255, 255, 255, 0.3)',
-                padding: isMobile ? '10px 14px' : '8px 12px',
+                padding: isMobile ? '10px 12px' : '8px 12px',
                 borderRadius: '4px',
                 fontFamily: "'GC Romans Flower', monospace",
-                fontSize: isMobile ? '11px' : '12px',
+                fontSize: isMobile ? '10px' : '12px',
                 cursor: isActive || isTransitioning ? 'default' : 'pointer',
                 opacity: isTransitioning ? 0.5 : 1,
                 transition: 'all 0.2s ease',
                 // Ensure minimum touch target size on mobile
-                minHeight: isMobile ? '44px' : 'auto',
+                minHeight: isMobile ? '40px' : 'auto',
+                minWidth: isMobile ? '70px' : 'auto',
+                textAlign: 'center' as const,
               }}
             >
               {hotspot.name}
