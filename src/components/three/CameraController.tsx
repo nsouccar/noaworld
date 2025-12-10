@@ -12,6 +12,8 @@ interface CameraControllerProps {
   enableHeadBob?: boolean // Add subtle vertical bobbing during movement
   headBobAmount?: number // How much to bob (in units)
   headBobSpeed?: number // How fast to bob
+  // Mobile settings
+  isMobile?: boolean
 }
 
 // Threshold for considering transition "complete"
@@ -25,6 +27,7 @@ export function CameraController({
   enableHeadBob = true,
   headBobAmount = 0.03,
   headBobSpeed = 8,
+  isMobile = false,
 }: CameraControllerProps) {
   const { camera } = useThree()
   const controlsRef = useRef<any>(null)
@@ -59,6 +62,14 @@ export function CameraController({
     camera.getWorldDirection(direction)
     currentLookAtRef.current.copy(camera.position).add(direction.multiplyScalar(5))
   }, [hotspot, camera])
+
+  // Update FOV based on mobile state
+  useEffect(() => {
+    if ('fov' in camera) {
+      (camera as THREE.PerspectiveCamera).fov = isMobile ? 70 : 50
+      ;(camera as THREE.PerspectiveCamera).updateProjectionMatrix()
+    }
+  }, [camera, isMobile])
 
   useFrame((_, delta) => {
     if (!isMovingRef.current) return
@@ -112,16 +123,19 @@ export function CameraController({
       enablePan={false} // Disable panning to keep view centered
       enableZoom={true}
       enableRotate={true}
-      rotateSpeed={0.5}
+      rotateSpeed={isMobile ? 0.3 : 0.5}
       zoomSpeed={0.8}
       minDistance={0.5}
-      maxDistance={3} // Allow stepping back a bit
-      // Limit vertical rotation to prevent looking at ceiling/floor
-      maxPolarAngle={Math.PI * 0.55}
-      minPolarAngle={Math.PI * 0.45}
-      // Limit horizontal rotation to prevent looking outside
-      minAzimuthAngle={-Math.PI * 0.1}
-      maxAzimuthAngle={Math.PI * 0.1}
+      maxDistance={isMobile ? 4 : 3}
+      // Limit vertical rotation - wider range on mobile
+      maxPolarAngle={Math.PI * (isMobile ? 0.65 : 0.55)}
+      minPolarAngle={Math.PI * (isMobile ? 0.35 : 0.45)}
+      // Limit horizontal rotation - wider range on mobile
+      minAzimuthAngle={-Math.PI * (isMobile ? 0.3 : 0.1)}
+      maxAzimuthAngle={Math.PI * (isMobile ? 0.3 : 0.1)}
+      // Touch settings for mobile
+      enableDamping={true}
+      dampingFactor={0.1}
     />
   )
 }
