@@ -20,6 +20,36 @@ interface CameraControllerProps {
 const POSITION_THRESHOLD = 0.01
 const ROTATION_THRESHOLD = 0.01
 
+// Orbit constraint values (must match OrbitControls props below)
+const getOrbitConstraints = (isMobile: boolean) => ({
+  minPolarAngle: Math.PI * (isMobile ? 0.25 : 0.35),
+  maxPolarAngle: Math.PI * (isMobile ? 0.75 : 0.65),
+  minAzimuthAngle: -Math.PI * (isMobile ? 0.3 : 0.1),
+  maxAzimuthAngle: Math.PI * (isMobile ? 0.3 : 0.1),
+})
+
+// Clamp a lookAt target to fit within orbit constraints
+// This prevents snap-back when OrbitControls re-enables
+function clampLookAtToConstraints(
+  cameraPos: THREE.Vector3,
+  lookAt: THREE.Vector3,
+  isMobile: boolean
+): THREE.Vector3 {
+  const constraints = getOrbitConstraints(isMobile)
+
+  // Calculate spherical coordinates from camera to lookAt
+  const offset = new THREE.Vector3().subVectors(cameraPos, lookAt)
+  const spherical = new THREE.Spherical().setFromVector3(offset)
+
+  // Clamp the angles
+  spherical.phi = Math.max(constraints.minPolarAngle, Math.min(constraints.maxPolarAngle, spherical.phi))
+  spherical.theta = Math.max(constraints.minAzimuthAngle, Math.min(constraints.maxAzimuthAngle, spherical.theta))
+
+  // Convert back to cartesian and compute new lookAt
+  const clampedOffset = new THREE.Vector3().setFromSpherical(spherical)
+  return new THREE.Vector3().subVectors(cameraPos, clampedOffset)
+}
+
 export function CameraController({
   hotspot,
   onTransitionComplete,
@@ -47,7 +77,11 @@ export function CameraController({
   // Update targets when hotspot changes
   useEffect(() => {
     targetPositionRef.current.copy(hotspot.cameraPosition)
-    targetLookAtRef.current.copy(hotspot.lookAt)
+
+    // Clamp the lookAt to orbit constraints so we transition directly to the final position
+    const clampedLookAt = clampLookAtToConstraints(hotspot.cameraPosition, hotspot.lookAt, isMobile)
+    targetLookAtRef.current.copy(clampedLookAt)
+
     isMovingRef.current = true
     transitionTimeRef.current = 0
     hasNotifiedComplete.current = false
@@ -61,7 +95,7 @@ export function CameraController({
     const direction = new THREE.Vector3()
     camera.getWorldDirection(direction)
     currentLookAtRef.current.copy(camera.position).add(direction.multiplyScalar(5))
-  }, [hotspot, camera])
+  }, [hotspot, camera, isMobile])
 
   // Update FOV based on mobile state
   useEffect(() => {
@@ -84,13 +118,15 @@ export function CameraController({
     if (positionDistance < POSITION_THRESHOLD && lookAtDistance < ROTATION_THRESHOLD) {
       isMovingRef.current = false
       camera.position.copy(targetPositionRef.current)
+      currentLookAtRef.current.copy(targetLookAtRef.current)
       camera.lookAt(targetLookAtRef.current)
 
-      // Re-enable orbit controls and set target
+      // Re-enable orbit controls - use saveState to lock in position before enabling
       if (controlsRef.current) {
         controlsRef.current.target.copy(targetLookAtRef.current)
+        controlsRef.current.saveState() // Save current position as the "default"
         controlsRef.current.enabled = true
-        controlsRef.current.update()
+        // Don't call update() - it would recalculate and potentially clamp/snap
       }
 
       if (!hasNotifiedComplete.current) {
@@ -115,6 +151,11 @@ export function CameraController({
     // Smoothly interpolate lookAt target
     currentLookAtRef.current.lerp(targetLookAtRef.current, lerpFactor)
     camera.lookAt(currentLookAtRef.current)
+
+    // Keep OrbitControls target in sync during transition to prevent snap-back
+    if (controlsRef.current) {
+      controlsRef.current.target.copy(currentLookAtRef.current)
+    }
   })
 
   return (
@@ -126,13 +167,13 @@ export function CameraController({
       rotateSpeed={isMobile ? 0.3 : 0.5}
       zoomSpeed={0.8}
       minDistance={0.5}
-      maxDistance={isMobile ? 4 : 3}
-      // Limit vertical rotation - wider range on mobile
-      maxPolarAngle={Math.PI * (isMobile ? 0.65 : 0.55)}
-      minPolarAngle={Math.PI * (isMobile ? 0.35 : 0.45)}
-      // Limit horizontal rotation - wider range on mobile
-      minAzimuthAngle={-Math.PI * (isMobile ? 0.3 : 0.1)}
-      maxAzimuthAngle={Math.PI * (isMobile ? 0.3 : 0.1)}
+      maxDistance={isMobile ? 5 : 4}
+      // Limit vertical rotation to prevent looking at ceiling/floor
+      maxPolarAngle={Math.PI * 0.55}
+      minPolarAngle={Math.PI * 0.4}
+      // Limit horizontal rotation to keep focus on the room
+      minAzimuthAngle={-Math.PI * 0.15}
+      maxAzimuthAngle={Math.PI * 0.15}
       // Touch settings for mobile
       enableDamping={true}
       dampingFactor={0.1}

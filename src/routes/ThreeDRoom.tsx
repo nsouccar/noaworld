@@ -164,7 +164,13 @@ export default function ThreeDRoom() {
   }, [currentHotspot])
 
   return (
-    <div style={{ width: '100%', height: '100vh', position: 'relative' }}>
+    <div style={{
+      width: '100%',
+      height: '100vh',
+      position: 'relative',
+      overflow: 'hidden',
+      touchAction: 'none',
+    }}>
       <Canvas
         camera={{
           position: introHotspot.cameraPosition.toArray() as [number, number, number],

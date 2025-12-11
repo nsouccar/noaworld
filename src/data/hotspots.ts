@@ -54,9 +54,9 @@ export const hotspots: Hotspot[] = [
   {
     id: 'me',
     name: 'Me',
-    // Looking at the picture frame on the nightstand - closer view
-    cameraPosition: new THREE.Vector3(0.4, 0.8, -2.0),
-    lookAt: new THREE.Vector3(0.4, 0.6, -2.3),
+    // Looking at the picture frame - adjusted for orbit constraints (more horizontal view)
+    cameraPosition: new THREE.Vector3(0.4, 0.7, -1.7),
+    lookAt: new THREE.Vector3(0.4, 0.65, -2.3),
     markerPosition: new THREE.Vector3(0.4, 0.01, -1.5),
     label: 'Me',
     labelPosition: new THREE.Vector3(0.4, 0.95, -2.3),
